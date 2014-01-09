@@ -6,11 +6,11 @@ import org.tzi.use.uml.mm.MAssociation
 import org.tzi.use.uml.mm.MAttribute
 import org.tzi.use.uml.mm.MClass
 import org.tzi.use.uml.ocl.`type`.EnumType
-
 import fUML.Syntax.Classes.Kernel.Association
 import fUML.Syntax.Classes.Kernel.Class_
 import fUML.Syntax.Classes.Kernel.Property
 import junit.framework.TestCase
+import org.modelexecution.fuml.use.UniversityManagementSystem
 
 class FumlModel2UseModelTest extends TestCase {
   import scala.collection.JavaConversions._

@@ -19,6 +19,7 @@ import fUML.Semantics.Classes.Kernel.Link
 import org.tzi.use.uml.sys.MObjectState
 import org.tzi.use.uml.ocl.value
 import fUML.Semantics.Classes.Kernel.ExtensionalValue
+import org.modelexecution.fuml.use.UniversityManagementSystem
 
 class FumlValues2UseValuesTest extends TestCase {
   import scala.collection.JavaConversions._

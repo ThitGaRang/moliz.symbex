@@ -7,9 +7,8 @@
  * Contributors:
  * Philip Langer - initial API and implementation
  */
-package org.modelexecution.fuml.use.transform
+package org.modelexecution.fuml.use
 import org.modelexecution.fuml.builder.FumlModelBuilder
-import fUML.Semantics.Classes.Kernel.Object_
 import fUML.Semantics.Classes.Kernel.Value
 
 class UniversityManagementSystem extends FumlModelBuilder {
