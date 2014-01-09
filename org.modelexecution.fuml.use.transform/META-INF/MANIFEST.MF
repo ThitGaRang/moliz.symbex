@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: fUML Input Model Finder
-Bundle-SymbolicName: org.modelexecution.fuml.use.transform
+Bundle-SymbolicName: org.modelexecution.fuml.use
 Bundle-Version: 1.0.0.qualifier
 Bundle-Vendor: modelexecution.org
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
