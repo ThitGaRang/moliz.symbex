@@ -142,16 +142,18 @@ class FumlModel2UseModel(val modelName: String)
 
 object FumlModel2UseModel {
   def apply(modelName: String) = new FumlModel2UseModel(modelName)
-  
-  def apply(element: NamedElement) = {
-    val fumlModel2UseModel = new FumlModel2UseModel(element.name)
-    fumlModel2UseModel.transform(element)
-    fumlModel2UseModel
+
+  def apply(element: NamedElement): FumlModel2UseModel = {
+    apply(element.name, element)
   }
   
-  def apply(modelName: String, element: Element) = {
+  def apply(modelName: String, element: Element): FumlModel2UseModel = {
+    apply(modelName, Set(element))
+  }
+
+  def apply(modelName: String, elements: Set[Element]) = {
     val fumlModel2UseModel = new FumlModel2UseModel(modelName)
-    fumlModel2UseModel.transform(element)
+    fumlModel2UseModel.transformAll(elements)
     fumlModel2UseModel
   }
 }
