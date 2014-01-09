@@ -26,6 +26,9 @@ import fUML.Syntax.Classes.Kernel.Enumeration
 import org.tzi.use.uml.mm.MClass
 import org.tzi.use.uml.mm.MClassifier
 import org.tzi.use.uml.mm.MNamedElement
+import fUML.Syntax.Classes.Kernel.ValueSpecification
+import fUML.Syntax.Classes.Kernel.LiteralInteger
+import fUML.Syntax.Classes.Kernel.LiteralUnlimitedNatural
 
 class FumlModel2UseModel(val modelName: String)
   extends TracingOneToOneTransformation[Element, MNamedElement] {
@@ -117,9 +120,16 @@ class FumlModel2UseModel(val modelName: String)
   }
 
   private def multiplicity(multiplicity: MultiplicityElement) = {
-    val lower = multiplicity.lowerValue.toString()
-    val upper = multiplicity.upperValue.toString()
+    val lower = stringRepresentation(multiplicity.lowerValue)
+    val upper = stringRepresentation(multiplicity.upperValue)
     s"$lower..$upper"
+  }
+  
+  private def stringRepresentation(valueSpec: ValueSpecification) = {
+    valueSpec match {
+      case literal: LiteralInteger => literal.value.toString
+      case literal : LiteralUnlimitedNatural => literal.value.naturalValue.toString.replaceFirst("-1", "*")
+    }
   }
 
   private def instantiateProperty(property: Property) = {
