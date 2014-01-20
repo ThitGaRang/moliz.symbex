@@ -10,7 +10,7 @@ import fUML.Syntax.Classes.Kernel.Association
 import fUML.Syntax.Classes.Kernel.Class_
 import fUML.Syntax.Classes.Kernel.Property
 import junit.framework.TestCase
-import org.modelexecution.fuml.use.UniversityManagementSystem
+import org.modelexecution.fuml.use.examples.UniversityManagementSystem
 
 class FumlModel2UseModelTest extends TestCase {
   import scala.collection.JavaConversions._

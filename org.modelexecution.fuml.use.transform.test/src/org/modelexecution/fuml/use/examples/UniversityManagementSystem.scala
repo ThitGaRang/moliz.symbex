@@ -7,7 +7,7 @@
  * Contributors:
  * Philip Langer - initial API and implementation
  */
-package org.modelexecution.fuml.use
+package org.modelexecution.fuml.use.examples
 import org.modelexecution.fuml.builder.FumlModelBuilder
 import fUML.Semantics.Classes.Kernel.Value
 
