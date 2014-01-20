@@ -9,52 +9,52 @@
  */
 package org.modelexecution.fuml.use.modelfinder
 
-import org.junit.Assert._
-
-import junit.framework.TestCase
-
-import org.modelexecution.fuml.use.examples.UniversityManagementSystem
-import org.modelexecution.fuml.use.modelfinder.UseModelFinder;
+import org.junit.Test
+import org.modelexecution.fuml.use.examples.ClassesAndObjects
 import org.modelexecution.fuml.use.transform.FumlModel2UseModel
 import org.modelexecution.fuml.use.transform.FumlValues2UseValues
-import org.junit.Test
 import org.tzi.use.uml.sys.MObject
 import org.tzi.use.uml.sys.MSystem
+import junit.framework.TestCase
 import org.tzi.use.uml.mm.MClass
 
 class UseModelFinderTest extends TestCase {
 
-  val model = new UniversityManagementSystem
-
-  val universityClass = model.universityClass
-  val lectureClass = model.lectureClass
-  val personClass = model.personClass
-  val studentClass = model.studentClass
-  val studentStatusEnum = model.studentStatusEnum
+  val model = new ClassesAndObjects
 
   @Test def testTransformingUniversityManagementSystem {
     val fUml2UseModel = FumlModel2UseModel(model.rootPackage)
     val fUmlValues2UseValues = FumlValues2UseValues(fUml2UseModel)
     val state = fUmlValues2UseValues.useState
-    val fUmlValues = model.valueScenario1
-    fUmlValues2UseValues.transformAll(model.valueScenario1).map(_.get)
+    val fUmlValues = model.personAddressScenario
 
-    val tanjaObject = fUmlValues2UseValues.use(model.getObject("tanja")).asInstanceOf[MObject]
-    val meObject = fUmlValues2UseValues.use(model.getObject("me")).asInstanceOf[MObject]
+    fUmlValues2UseValues.transformAll(fUmlValues).map(_.get)
 
-    val objectConstraints = Set[UseObjectConstraint](
-      UseObjectConstraint(tanjaObject, "self.attendedLectures->exists(l | self.earnedECTS > l.ects)"),
-      UseObjectConstraint(tanjaObject, "self.attendedLectures->exists(l | self.lastName <> l.lectureName)"),
-      UseObjectConstraint(meObject, "self.ects > 1 and self.ects < 16"))
-
-    val useStudentClass = fUml2UseModel.use(studentClass).asInstanceOf[MClass]
-
+    // avoid generating additional classes, references, and attributes
+    val useClassClass = fUml2UseModel.use(model.classClass).asInstanceOf[MClass]
+    val useReferenceClass = fUml2UseModel.use(model.referenceClass).asInstanceOf[MClass]
+    val useAttributeClass = fUml2UseModel.use(model.attributeClass).asInstanceOf[MClass]
+    val useObjectClass = fUml2UseModel.use(model.objectClass).asInstanceOf[MClass]
     val configuration = ModelFinderConfiguration(
-      Set(ClassBounds(useStudentClass, Bounds(1, 10))))
+      Set(
+        ClassBounds(useClassClass, Bounds(2, 2)),
+        ClassBounds(useAttributeClass, Bounds(2, 2)),
+        ClassBounds(useReferenceClass, Bounds(1, 1)),
+        ClassBounds(useObjectClass, Bounds(1, 2))
+        ))
+
+    val personClassObject = fUmlValues2UseValues.use(model.getObject("PersonClass")).asInstanceOf[MObject]
+
+    val objectConstraints = Set[UseObjectConstraint]( 
+        UseObjectConstraint(personClassObject, "self.objects->forAll(o | o.type = self and o.slink->forAll(l | self.references->exists(r | r.referenceType = l.target.type)))")
+    )
+
     val modelFinder = new UseModelFinder(fUmlValues2UseValues.useSystem, objectConstraints)
 
-    modelFinder.findModel(configuration)
+    val result = modelFinder.findModel(configuration)
 
+    println(result)
+    println("===============")
     printObjectSpace(fUmlValues2UseValues.useSystem)
   }
 
@@ -68,8 +68,10 @@ class UseModelFinderTest extends TestCase {
     while (objectIter.hasNext()) {
       val obj = useSystem.state().objectByName(objectIter.next())
       val objectState = obj.state(useSystem.state())
-      println(obj)
+      println(obj + " : " + obj.cls().name())
+      println("------")
       println(objectState.attributeValueMap())
+      println
     }
   }
 
@@ -78,9 +80,11 @@ class UseModelFinderTest extends TestCase {
     while (linkIter.hasNext()) {
       val link = linkIter.next()
       println(link.association())
+      println("------")
       for (linkedObj <- link.linkedObjectsAsArray().array) {
         println(linkedObj)
       }
+      println
     }
   }
 
