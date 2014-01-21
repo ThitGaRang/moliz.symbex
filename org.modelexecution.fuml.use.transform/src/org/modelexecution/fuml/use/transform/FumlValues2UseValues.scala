@@ -60,6 +60,13 @@ class FumlValues2UseValues(val fUml2Use: FumlModel2UseModel)
 
   private def instantiateUseObject(fumlObject: Object_) = {
     val objId = objectId(fumlObject)
+    
+    try {
+    typeOf(fumlObject)
+    } catch {
+      case _ : Throwable => println(fumlObject)
+    }
+    
     val useObject = useSystemApi.createObject(typeOf(fumlObject).name, objId)
     val featureValues = featureValueMap(fumlObject)
     featureValues.foreach {
