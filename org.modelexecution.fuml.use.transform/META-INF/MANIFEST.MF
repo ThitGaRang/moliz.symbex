@@ -7,5 +7,5 @@ Bundle-Vendor: modelexecution.org
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Require-Bundle: org.modelexecution.fumldebug;bundle-version="1.0.0";visibility:=reexport,
  org.scala-ide.scala.library;visibility:=reexport,
- org.tzi.use;bundle-version="3.0.6"
+ org.tzi.use;bundle-version="3.1.0"
 Export-Package: org.modelexecution.fuml.use.transform

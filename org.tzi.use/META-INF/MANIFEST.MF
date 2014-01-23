@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: USE
 Bundle-SymbolicName: org.tzi.use
-Bundle-Version: 3.0.6
+Bundle-Version: 3.1.0
 Bundle-Vendor: use.tzi.org
 Bundle-RequiredExecutionEnvironment: JavaSE-1.7
 Bundle-ClassPath: lib/antlr-3.4-complete.jar,
@@ -90,7 +90,6 @@ Export-Package: kodkod.ast,
  org.tzi.use.uml.mm,
  org.tzi.use.uml.ocl.expr,
  org.tzi.use.uml.ocl.expr.operations,
- org.tzi.use.uml.ocl.expr.visitor,
  org.tzi.use.uml.ocl.extension,
  org.tzi.use.uml.ocl.type,
  org.tzi.use.uml.ocl.value,
