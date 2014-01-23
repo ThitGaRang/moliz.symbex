@@ -9,8 +9,9 @@
  */
 package org.modelexecution.fuml.use.modelfinder
 
+import org.junit.Assert._
 import org.junit.Test
-import org.modelexecution.fuml.use.examples.ClassesAndObjects
+import org.modelexecution.fuml.builder.examples.ClassesAndObjects
 import org.modelexecution.fuml.use.transform.FumlModel2UseModel
 import org.modelexecution.fuml.use.transform.FumlValues2UseValues
 import org.tzi.use.uml.sys.MObject
@@ -40,13 +41,13 @@ class UseModelFinderTest extends TestCase {
         ClassBounds(useClassClass, Bounds(2, 2)),
         ClassBounds(useAttributeClass, Bounds(2, 2)),
         ClassBounds(useReferenceClass, Bounds(1, 1)),
-        ClassBounds(useObjectClass, Bounds(1, 2))
+        ClassBounds(useObjectClass, Bounds(0, 2))
         ))
 
     val personClassObject = fUmlValues2UseValues.use(model.getObject("PersonClass")).asInstanceOf[MObject]
 
     val objectConstraints = Set[UseObjectConstraint]( 
-        UseObjectConstraint(personClassObject, "self.objects->forAll(o | o.type = self and o.slink->forAll(l | self.references->exists(r | r.referenceType = l.target.type)))")
+        UseObjectConstraint(personClassObject, "self.objects->exists(o | o.type = self and o.slink->forAll(l | self.references->exists(r | r.referenceType = l.target.type)))")
     )
 
     val modelFinder = new UseModelFinder(fUmlValues2UseValues.useSystem, objectConstraints)

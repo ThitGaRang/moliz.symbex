@@ -19,11 +19,11 @@ import fUML.Semantics.Classes.Kernel.Link
 import org.tzi.use.uml.sys.MObjectState
 import org.tzi.use.uml.ocl.value
 import fUML.Semantics.Classes.Kernel.ExtensionalValue
-import org.modelexecution.fuml.use.examples.UniversityManagementSystem
+import org.modelexecution.fuml.builder.examples.UniversityManagementSystem
 
 class FumlValues2UseValuesRoundtripTest extends TestCase {
   import scala.collection.JavaConversions._
-  
+
   type UseValue = value.Value
   type FumlValue = Kernel.Value
 
@@ -34,23 +34,23 @@ class FumlValues2UseValuesRoundtripTest extends TestCase {
   val personClass = model.personClass
   val studentClass = model.studentClass
   val studentStatusEnum = model.studentStatusEnum
-  
+
   var state: MSystemState = null
 
   @Test def testTransformingUniversityManagementSystem {
     val fUml2UseModel = FumlModel2UseModel(model.rootPackage)
-    
+
     // transform fUML 2 USE -- RUN 1
     val fUmlValues2UseValues = FumlValues2UseValues(fUml2UseModel)
     state = fUmlValues2UseValues.useState
     val fUmlValues = model.valueScenario1
     val useValues = fUmlValues2UseValues.transformAll(model.valueScenario1).map(_.get)
-    
+
     // transform USE back to fUML -- Roundtrip
     val useValues2FumlValues = UseValues2FumlValues(fUml2UseModel)
     useValues2FumlValues.useState = fUmlValues2UseValues.useState
     val fUmlValues2 = useValues2FumlValues.transformAll(useValues).map(_.get)
-    
+
     // transform resulting fUML again to USE -- RUN 2
     val fUmlValues2UseValues2 = FumlValues2UseValues(fUml2UseModel)
     val useValues2 = fUmlValues2UseValues2.transformAll(fUmlValues2).map(_.get)
@@ -77,21 +77,21 @@ class FumlValues2UseValuesRoundtripTest extends TestCase {
   private def assertEqualsObject(fumlObject: Object_, useObject: MObjectState) = {
     val useClass = useObject.`object`().cls()
     assertEquals(fumlObject.types.getValue(0).name, useClass.name())
-    useClass.allAttributes().foreach{ useAtt =>
+    useClass.allAttributes().foreach { useAtt =>
       val useAttValue = useObject.attributeValue(useAtt)
       val fumlAttValue = featureValue(fumlObject, useAtt.name()).getValue(0)
-      assertEquals(string(fumlAttValue), string(useAttValue)) 
+      assertEquals(string(fumlAttValue), string(useAttValue))
     }
   }
-  
+
   def featureValue(fumlValue: ExtensionalValue, name: String) = {
     fumlValue.featureValues.find(featureValue => name == featureValue.feature.name).get.values
   }
-  
+
   def string(fumlValue: FumlValue) = {
     fumlValue.toString()
   }
-  
+
   def string(useValue: UseValue) = {
     useValue match {
       case enumValue: value.EnumValue => enumValue.value()

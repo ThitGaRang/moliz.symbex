@@ -10,13 +10,16 @@
 package org.modelexecution.fuml.use.modelfinder
 
 import java.io.PrintWriter
+
 import scala.collection.JavaConversions.asScalaSet
 import scala.collection.JavaConversions.collectionAsScalaIterable
 import scala.collection.JavaConversions.seqAsJavaList
+
 import org.modelexecution.fuml.use.modelfinder.internal.InvariantTransformator
 import org.modelexecution.fuml.use.modelfinder.internal.KodkodConfigurator
 import org.tzi.kodkod.model.`type`.PrimitiveTypeFactory
 import org.tzi.kodkod.model.config.impl.ModelConfigurator
+import org.tzi.kodkod.model.iface.IModel
 import org.tzi.kodkod.model.impl.SimpleFactory
 import org.tzi.kodkod.ocl.OCLGroupRegistry
 import org.tzi.kodkod.ocl.operation.AnyOperationGroup
@@ -39,11 +42,6 @@ import org.tzi.use.uml.ocl.`type`.ObjectType
 import org.tzi.use.uml.ocl.expr.Expression
 import org.tzi.use.uml.sys.MObject
 import org.tzi.use.uml.sys.MSystem
-import org.tzi.kodkod.model.iface.IModel
-import kodkod.ast.Relation
-import kodkod.instance.TupleSet
-
-// TODO class inheritance in mModel is causing exception in kodkod with objectdiagramenricher
 
 // TODO optimization
 // could be changed so that constructor only takes model

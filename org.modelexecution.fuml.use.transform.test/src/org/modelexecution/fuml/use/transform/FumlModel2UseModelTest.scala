@@ -1,16 +1,20 @@
 package org.modelexecution.fuml.use.transform
 
-import org.junit.Assert._
+import scala.collection.JavaConversions.asScalaBuffer
+
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.modelexecution.fuml.builder.examples.UniversityManagementSystem
 import org.tzi.use.uml.mm.MAssociation
 import org.tzi.use.uml.mm.MAttribute
 import org.tzi.use.uml.mm.MClass
 import org.tzi.use.uml.ocl.`type`.EnumType
+
 import fUML.Syntax.Classes.Kernel.Association
 import fUML.Syntax.Classes.Kernel.Class_
 import fUML.Syntax.Classes.Kernel.Property
 import junit.framework.TestCase
-import org.modelexecution.fuml.use.examples.UniversityManagementSystem
 
 class FumlModel2UseModelTest extends TestCase {
   import scala.collection.JavaConversions._
