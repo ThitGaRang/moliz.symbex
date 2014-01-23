@@ -32,9 +32,9 @@ trait FumlModelBuilder extends FumlModel {
   implicit def BuilderWrapper2Link(builder: BuilderWrapper[Link]) = builder.wrapped
   implicit def BuilderWrapper2Activity(builder: BuilderWrapper[Activity]) = builder.wrapped
 
-  val STRING = { val t = new PrimitiveType; t.name = "String"; t } //ExecutionContext.getInstance().getPrimitiveStringType()
-  val INTEGER = { val t = new PrimitiveType; t.name = "Integer"; t } //ExecutionContext.getInstance().getPrimitiveIntegerType()
-  val BOOLEAN = { val t = new PrimitiveType; t.name = "Boolean"; t } //ExecutionContext.getInstance().getPrimitiveBooleanType()
+  val STRING = ExecutionContext.getInstance().getPrimitiveStringType()
+  val INTEGER = ExecutionContext.getInstance().getPrimitivIntegerType()
+  val BOOLEAN = ExecutionContext.getInstance().getPrimitiveBooleanType()
 
   protected def packag(name: String) = {
     val packag = packages.get(name).getOrElse(createPackage(name))
