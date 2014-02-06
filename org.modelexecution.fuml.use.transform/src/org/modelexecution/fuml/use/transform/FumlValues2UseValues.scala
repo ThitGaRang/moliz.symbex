@@ -37,6 +37,7 @@ import fUML.Semantics.Classes.Kernel.ValueList
 import fUML.Syntax.Classes.Kernel.StructuralFeature
 import org.tzi.use.uml.mm.MAssociation
 import org.tzi.use.uml.mm.MAssociationEnd
+import fUML.Semantics.Classes.Kernel.Reference
 
 class FumlValues2UseValues(val fUml2Use: FumlModel2UseModel)
   extends TracingOneToOneTransformation[Kernel.Value, Object] {
@@ -109,7 +110,12 @@ class FumlValues2UseValues(val fUml2Use: FumlModel2UseModel)
     (featureValue.feature, featureValue.values)
   }
 
-  private def objectId(obj: FumlValue): String = "Obj_" + obj.hashCode()
+  private def objectId(obj: FumlValue): String = {
+    obj match {
+      case reference: Reference => objectId(reference.referent)
+      case _ => "Obj_" + obj.hashCode()
+    }
+  }
 
   private def typeOf(fumlValue: FumlValue) = fumlValue.getTypes().get(0)
 
@@ -131,7 +137,10 @@ class FumlValues2UseValues(val fUml2Use: FumlModel2UseModel)
   }
 
   private def linkedObjects(fumlLink: Link) = {
-    featureValueValues(fumlLink).collect { case obj: Object_ => obj }
+    featureValueValues(fumlLink).collect {
+      case reference: Reference => reference.referent
+      case obj: Object_ => obj
+    }
   }
 
   private def featureValueValues(value: ExtensionalValue) = {

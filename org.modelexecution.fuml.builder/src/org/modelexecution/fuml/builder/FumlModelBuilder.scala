@@ -38,6 +38,7 @@ import fUML.Syntax.Activities.IntermediateActivities.ObjectFlow
 import fUML.Syntax.Activities.IntermediateActivities.ActivityEdge
 import fUML.Syntax.Actions.BasicActions.InputPinList
 import fUML.Syntax.Actions.BasicActions.Action
+import fUML.Semantics.Classes.Kernel.Reference
 
 trait FumlModelBuilder extends FumlModel {
 
@@ -161,7 +162,13 @@ trait FumlModelBuilder extends FumlModel {
   }
 
   def featureValue(feature: StructuralFeature, value: Object_): FeatureValue = {
-    featureValue(feature, Set(value))
+    featureValue(feature, Set(toReference(value)))
+  }
+  
+  private def toReference(objectValue : Object_) = {
+    val reference = new Reference
+    reference.referent = objectValue
+    reference
   }
 
   def featureValue(feature: StructuralFeature, values: Set[_ <: Value]): FeatureValue = {
@@ -387,7 +394,10 @@ case class AssociationBuilder(association: Association) extends BuilderWrapper[A
   }
 
   def withProperties(properties: Set[Property]): AssociationBuilder = {
-    properties.foreach(association.memberEnd.add(_))
+    properties.foreach{property =>
+      property.association = association
+      association.memberEnd.add(property)
+    }
     this
   }
 

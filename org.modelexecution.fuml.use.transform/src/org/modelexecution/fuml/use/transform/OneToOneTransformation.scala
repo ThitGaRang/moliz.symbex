@@ -15,7 +15,7 @@ abstract trait OneToOneTransformation[A, B] extends Traverser[A] {
 
   protected def instantiate(a: A): Option[B]
 
-  def transformAll(as: Set[A]) = {
+  def transformAll(as: Set[_ <: A]) = {
     as map { transform(_) }
   }
 

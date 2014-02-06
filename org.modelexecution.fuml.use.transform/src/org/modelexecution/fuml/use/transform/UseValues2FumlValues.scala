@@ -44,6 +44,7 @@ import fUML.Semantics.Classes.Kernel.FeatureValueList
 import org.tzi.use.uml.ocl.`type`.EnumType
 import org.tzi.use.uml.sys.MSystemState
 import org.tzi.use.uml.sys.MLinkEnd
+import fUML.Semantics.Classes.Kernel.Reference
 
 class UseValues2FumlValues(val fUml2Use: FumlModel2UseModel)
   extends TracingOneToOneTransformation[Object, Kernel.Value] {
@@ -182,8 +183,14 @@ class UseValues2FumlValues(val fUml2Use: FumlModel2UseModel)
     val linkedUseObject = useLinkEnd.`object`()
     val featureValue = new FeatureValue()
     featureValue.feature = fumlProperty
-    featureValue.values.add(transform(linkedUseObject).get)
+    featureValue.values.add(toFumlReference(linkedUseObject))
     featureValue
+  }
+  
+  private def toFumlReference(useObject: MObject) = {
+    val reference = new Reference()
+    reference.referent = transform(useObject).get.asInstanceOf[Object_]
+    reference
   }
 
   def fuml(value: Object) = target(value)

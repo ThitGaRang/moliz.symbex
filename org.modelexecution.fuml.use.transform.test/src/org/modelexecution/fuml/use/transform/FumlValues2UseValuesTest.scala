@@ -20,6 +20,7 @@ import org.tzi.use.uml.sys.MObjectState
 import org.tzi.use.uml.ocl.value
 import fUML.Semantics.Classes.Kernel.ExtensionalValue
 import org.modelexecution.fuml.builder.examples.UniversityManagementSystem
+import fUML.Semantics.Classes.Kernel.Reference
 
 class FumlValues2UseValuesTest extends TestCase {
   import scala.collection.JavaConversions._
@@ -98,7 +99,14 @@ class FumlValues2UseValuesTest extends TestCase {
       case (useMemberEnd, index) =>
         val useLinkedObject = useLinkedObjects.get(index)
         val fumlFeatureValue = featureValue(fumlLink, useMemberEnd.name()).getValue(0)
-        assertEqualsObject(fumlFeatureValue.asInstanceOf[Object_], useLinkedObject.state(state))
+        assertEqualsObject(toObject(fumlFeatureValue), useLinkedObject.state(state))
+    }
+  }
+  
+  private def toObject(value: FumlValue) = {
+    value match {
+      case reference: Reference => reference.referent
+      case _ => value.asInstanceOf[Object_]
     }
   }
 
