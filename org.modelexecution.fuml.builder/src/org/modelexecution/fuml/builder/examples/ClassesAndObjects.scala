@@ -81,8 +81,14 @@ class ClassesAndObjects extends FumlModelBuilder {
 	    
 	  association("LinkReference") withProperties (
 	    property("links", clazz(linkClassName), 0, -1),
-	    property("reference", clazz(referenceClassName), 1, 1))
+	    property("reference", clazz(referenceClassName), 1, 1)),
 	    
+	  activity("validateObject")
+	    withInput(parameterNode("inputObject"))
+	    withOutput(parameterNode("isValid"))
+	    withNodes (
+	      readFeatureNode("readSlots", association("ObjectSlots").property("slots"))
+	    )
   )
 
   def personAddressScenario = {

@@ -1,3 +1,12 @@
+/*
+ * Copyright (c) 2013 Vienna University of Technology.
+ * All rights reserved. This program and the accompanying materials are made 
+ * available under the terms of the Eclipse Public License v1.0 which accompanies 
+ * this distribution, and is available at http://www.eclipse.org/legal/epl-v10.html
+ * 
+ * Contributors:
+ * Philip Langer - initial API and implementation
+ */
 package org.modelexecution.fuml.builder
 
 import scala.collection.mutable
@@ -21,6 +30,14 @@ import fUML.Semantics.Classes.Kernel.BooleanValue
 import fUML.Semantics.Classes.Kernel.IntegerValue
 import fUML.Semantics.Classes.Kernel.EnumerationValue
 import fUML.Semantics.Classes.Kernel.Link
+import fUML.Syntax.Activities.IntermediateActivities.ActivityParameterNode
+import fUML.Syntax.Actions.IntermediateActions.ReadStructuralFeatureAction
+import fUML.Syntax.Actions.BasicActions.InputPin
+import fUML.Syntax.Actions.BasicActions.OutputPin
+import fUML.Syntax.Activities.IntermediateActivities.ObjectFlow
+import fUML.Syntax.Activities.IntermediateActivities.ActivityEdge
+import fUML.Syntax.Actions.BasicActions.InputPinList
+import fUML.Syntax.Actions.BasicActions.Action
 
 trait FumlModelBuilder extends FumlModel {
 
@@ -106,7 +123,7 @@ trait FumlModelBuilder extends FumlModel {
     obj.types.add(clazz)
     obj
   }
-  
+
   def link(id: String, association: Association) = {
     val link = links.get(id).getOrElse(createLink(association))
     register[LinkBuilder](LinkBuilder(link), id)
@@ -123,26 +140,26 @@ trait FumlModelBuilder extends FumlModel {
     fValue.value = value
     featureValue(feature, Set(fValue))
   }
-  
+
   def featureValue(feature: StructuralFeature, value: Boolean): FeatureValue = {
     val fValue = new BooleanValue
     fValue.value = value
     featureValue(feature, Set(fValue))
   }
-  
+
   def featureValue(feature: StructuralFeature, value: Integer): FeatureValue = {
     val fValue = new IntegerValue
     fValue.value = value
     featureValue(feature, Set(fValue))
   }
-  
+
   def featureValue(feature: StructuralFeature, value: EnumerationLiteral): FeatureValue = {
     val fValue = new EnumerationValue
     fValue.literal = value
     fValue.`type` = value.enumeration
     featureValue(feature, Set(fValue))
   }
-  
+
   def featureValue(feature: StructuralFeature, value: Object_): FeatureValue = {
     featureValue(feature, Set(value))
   }
@@ -154,14 +171,40 @@ trait FumlModelBuilder extends FumlModel {
     featureValue
   }
 
-  def activity(name: String): Activity = {
+  def activity(name: String) = {
     val activity = activities.get(name).getOrElse(ActivityFactory.createActivity(name))
     register[ActivityBuilder](ActivityBuilder(activity))
+  }
+
+  def parameterNode(name: String) = {
+    val node = new ActivityParameterNode
+    node.name = name
+    node
   }
 
   def initialNode(name: String) = {
     val node = new InitialNode
     node.name = name
+    node
+  }
+
+  def readFeatureNode(name: String, feature: StructuralFeature) = {
+    val node = new ReadStructuralFeatureAction
+    node.name = name
+    
+    val outputpin = new OutputPin()
+    outputpin.setName("OutputPin result (" + name + ")")
+    node.result = outputpin
+    node.output.add(outputpin)
+
+    val input_object = new InputPin()
+    input_object.setName("InputPin object (" + name + ")")
+    input_object.setLower(1)
+    input_object.setUpper(1)
+    node.`object` = input_object
+    node.input.add(input_object)
+
+    node.structuralFeature = feature
     node
   }
 
@@ -217,11 +260,11 @@ trait FumlModel {
   def getAssociation(name: String): Association = {
     associations.get(name).get
   }
-  
+
   def getObject(id: String): Object_ = {
     objects.get(id).get
   }
-  
+
   def getLink(id: String): Link = {
     links.get(id).get
   }
@@ -256,6 +299,13 @@ sealed abstract class BuilderWrapper[T](val wrapped: T) {
       case node: ActivityNode => name == node.name
       case _ => false
     }
+  }
+
+  def createMultiplicityElement(lower: Int, upper: Int) = {
+    val me = new MultiplicityElement
+    me.setLower(lower)
+    me.setUpper(upper)
+    me
   }
 
 }
@@ -352,7 +402,7 @@ case class ObjectBuilder(obj: Object_) extends BuilderWrapper[Object_](obj) {
   def withAttributeValues(values: FeatureValue*): ObjectBuilder = {
     withAttributeValues(values.toSet[FeatureValue])
   }
-  
+
   def withAttributeValues(values: Set[FeatureValue]): ObjectBuilder = {
     values.foreach(obj.featureValues.addValue(_))
     this
@@ -365,7 +415,7 @@ case class LinkBuilder(link: Link) extends BuilderWrapper[Link](link) {
   def withValues(values: FeatureValue*): LinkBuilder = {
     withValues(values.toSet[FeatureValue])
   }
-  
+
   def withValues(values: Set[FeatureValue]): LinkBuilder = {
     values.foreach(link.featureValues.addValue(_))
     this
@@ -384,13 +434,48 @@ case class ActivityBuilder(activity: Activity) extends BuilderWrapper[Activity](
     this
   }
 
+  def withInput(node: ActivityParameterNode,
+    paraType: Type = null, lower: Int = 1, upper: Int = 1): ActivityBuilder = {
+    val parameter = createParameter(node, paraType, lower, upper)
+    parameter.direction = ParameterDirectionKind.in
+    this
+  }
+
+  def withOutput(node: ActivityParameterNode,
+    paraType: Type = null, lower: Int = 1, upper: Int = 1): ActivityBuilder = {
+    val parameter = createParameter(node, paraType, lower, upper)
+    parameter.direction = ParameterDirectionKind.out
+    this
+  }
+
+  private def createParameter(node: ActivityParameterNode,
+    paraType: Type, lower: Int, upper: Int) = {
+    val parameter = new Parameter
+    parameter.multiplicityElement = createMultiplicityElement(lower, upper)
+    parameter.name = node.name
+    parameter.`type` = paraType
+    node.parameter = parameter
+    activity.addNode(node)
+    activity.addOwnedParameter(parameter)
+    parameter
+  }
+
   def node(name: String) = {
     ConnectableNode(activity.node.toArray().find(isNodeWithName(_, name)))
+  }
+  
+  def action(name: String) = {
+    node(name).wrapped match {
+      case Some(node) if node.isInstanceOf[Action] => node.asInstanceOf[Action]
+      case _ => null
+    }
   }
 
 }
 
-case class ConnectableNode(wrapped: Option[Object]) {
+trait Connectable {
+  
+  def wrapped: Option[Object]
 
   val node = wrapped match {
     case w: Some[Object] => w.get match {
@@ -400,13 +485,24 @@ case class ConnectableNode(wrapped: Option[Object]) {
     case _ => null
   }
 
-  def -->(otherNode: ConnectableNode) {
+  def +->(otherNode: Connectable) {
+    addEdge(new ObjectFlow, otherNode)
+  }
+  
+  def -->(otherNode: Connectable) {
+    addEdge(new ControlFlow, otherNode)
+  }
+  
+  private def addEdge(edge: ActivityEdge, otherNode: Connectable) {
     if (this.node != null && otherNode.node != null) {
-      val edge = new ControlFlow
       edge.source = this.node
       edge.target = otherNode.node
       node.activity.addEdge(edge)
     } else throw new IllegalArgumentException()
   }
 
+}
+
+case class ConnectableNode(nodeToConnect: Option[Object]) extends Connectable {
+  override def wrapped = nodeToConnect
 }
