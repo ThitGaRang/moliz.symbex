@@ -10,6 +10,9 @@
 package org.modelexecution.fuml.builder.examples
 import org.modelexecution.fuml.builder.FumlModelBuilder
 import fUML.Semantics.Classes.Kernel.Value
+import fUML.Syntax.Activities.IntermediateActivities.Activity
+import org.modelexecution.fumldebug.core.util.ActivityFactory._
+import fUML.Semantics.Classes.Kernel.ExtensionalValue
 
 class UniversityManagementSystem extends FumlModelBuilder {
 
@@ -49,12 +52,26 @@ class UniversityManagementSystem extends FumlModelBuilder {
 	
 	  association("attendedLectures") withProperties (
 	    property("attendedLectures", clazz(lectureClassName), 0, -1),
-	    property("attendingStudents", clazz(studentClassName), 0, -1))
+	    property("attendingStudents", clazz(studentClassName), 0, -1)),
 	    
+	  activity("readAttendedLectures")
+	    withInput(parameterNode("inStudent"))
+	    withOutput(parameterNode("outLectures"))
   )
 
+  // Body of activity *readAttendedLectures*
+  val readAttendedLecturesActivity = activity("readAttendedLectures")
+  val attendedLecturesProperty = association("attendedLectures").property("attendedLectures")
+  val readAttendedLecturesAction = createReadStructuralFeatureAction(
+    readAttendedLecturesActivity, "readLectures", attendedLecturesProperty)
+  createObjectFlow(readAttendedLecturesActivity.activity,
+      readAttendedLecturesActivity.node("inStudent").node, readAttendedLecturesAction.`object`)
+  createObjectFlow(readAttendedLecturesActivity.activity,
+      readAttendedLecturesAction.result, readAttendedLecturesActivity.node("outLectures").node)
+  
+
   def valueScenario1 = {
-    Set[Value](
+    Set[ExtensionalValue](
       objectValue("uni", universityClass),
 
       objectValue("tanja", studentClass) withAttributeValues (
@@ -85,5 +102,6 @@ class UniversityManagementSystem extends FumlModelBuilder {
   def personClass = getClass(personClassName)
   def studentClass = getClass(studentClassName)
   def studentStatusEnum = getEnumeration(studentStatusEnumName)
+  def readAttendedLectures: Activity = activity("readAttendedLectures")
 
 }
