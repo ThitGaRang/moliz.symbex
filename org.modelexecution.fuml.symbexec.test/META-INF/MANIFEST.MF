@@ -1,0 +1,13 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: fUML Symbolic Execution Tests
+Bundle-SymbolicName: org.modelexecution.fuml.symbexec.test
+Bundle-Version: 1.0.0.qualifier
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Require-Bundle: org.junit;bundle-version="4.11.0",
+ org.modelexecution.fumldebug;bundle-version="1.0.0",
+ org.scala-ide.scala.library,
+ org.tzi.use;bundle-version="3.0.6",
+ org.modelexecution.fuml.symbexec;bundle-version="1.0.0",
+ org.modelexecution.fuml.builder;bundle-version="1.0.0",
+ org.modelexecution.fuml.use;bundle-version="1.0.0"

@@ -1,0 +1,8 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: fUML Symbolic Execution
+Bundle-SymbolicName: org.modelexecution.fuml.symbexec
+Bundle-Version: 1.0.0.qualifier
+Bundle-RequiredExecutionEnvironment: JavaSE-1.7
+Require-Bundle: org.modelexecution.fuml.use;bundle-version="1.0.0",
+ org.scala-ide.scala.library
