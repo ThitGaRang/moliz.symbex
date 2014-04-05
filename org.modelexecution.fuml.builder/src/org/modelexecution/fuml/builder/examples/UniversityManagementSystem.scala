@@ -55,7 +55,7 @@ class UniversityManagementSystem extends FumlModelBuilder {
 	    property("attendingStudents", clazz(studentClassName), 0, -1)),
 	    
 	  activity("readAttendedLectures")
-	    withInput(parameterNode("inStudent"))
+	    withInput(parameterNode("inStudent"), clazz(studentClassName))
 	    withOutput(parameterNode("outLectures"))
   )
 
