@@ -26,10 +26,9 @@ class UseModelFinderTest extends TestCase {
   @Test def testTransformingUniversityManagementSystem {
     val fUml2UseModel = FumlModel2UseModel(model.rootPackage)
     val fUmlValues2UseValues = FumlValues2UseValues(fUml2UseModel)
-    val state = fUmlValues2UseValues.useState
     val fUmlValues = model.personAddressScenario
 
-    fUmlValues2UseValues.transformAll(fUmlValues).map(_.get)
+    fUmlValues2UseValues.transformAll(fUmlValues)
 
     // avoid generating additional classes, references, and attributes
     val useClassClass = fUml2UseModel.use(model.classClass).asInstanceOf[MClass]

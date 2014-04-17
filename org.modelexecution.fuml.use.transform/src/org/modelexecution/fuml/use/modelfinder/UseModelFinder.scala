@@ -48,7 +48,7 @@ import org.tzi.use.uml.sys.MSystem
 // and findModel takes system state, to save memory and transformation time
 
 class UseModelFinder(val useSystem: MSystem,
-  val objectConstraints: Set[UseObjectConstraint]) {
+  val objectConstraints: Traversable[UseObjectConstraint]) {
   import collection.JavaConversions._
 
   val model = useSystem.model()
