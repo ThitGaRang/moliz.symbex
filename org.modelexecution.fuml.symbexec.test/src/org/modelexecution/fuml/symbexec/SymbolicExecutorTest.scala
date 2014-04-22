@@ -23,9 +23,10 @@ import fUML.Semantics.CommonBehaviors.BasicBehaviors.ParameterValue
 import fUML.Semantics.Classes.Kernel.Reference
 import org.modelexecution.fumldebug.core.event.ActivityEntryEvent
 import fUML.Syntax.Activities.IntermediateActivities.Activity
+import scala.collection.JavaConversions._
+import FumlUtilities._
 
 class SymbolicExecutorTest extends TestCase {
-  import scala.collection.JavaConversions._
 
   val model = new UniversityManagementSystem
   var executionIds = List[Int]()
@@ -33,7 +34,10 @@ class SymbolicExecutorTest extends TestCase {
   @Test
   def testSymbolicExecutionReadAttendedLecturesNoConcreteInput {
     val symbolicExecutor = SymbolicExecutor(FumlModel(model.rootPackage))
-    symbolicExecutor.execute(model.readAttendedLectures)
+    val executionConfiguration = ExecutionConfiguration(model.readAttendedLectures)
+    val executionTree = symbolicExecutor.execute(executionConfiguration)
+
+    println(executionTree)
     // TODO elaborate
   }
 
@@ -45,8 +49,8 @@ class SymbolicExecutorTest extends TestCase {
     val meValue = model.getObject("me")
 
     val activity = model.readAttendedLectures
-    val parameterValues = toParameterValueList(
-      Map((tanjaValue, parameter(activity, "inStudent"))))
+    val parameterValues = parameterValueList(
+      Map((parameter(activity, "inStudent"), List(tanjaValue))))
 
     fumlExecutionCtx.execute(activity, null, parameterValues)
 
@@ -63,29 +67,6 @@ class SymbolicExecutorTest extends TestCase {
     fumlExecutionCtx.addEventListener(newEventListener(println(_)))
     fumlExecutionCtx.addEventListener(newEventListener(saveExecutionId(_)))
     fumlExecutionCtx
-  }
-
-  private def parameter(activity: Activity, name: String) = {
-    activity.ownedParameter.find(name == _.name).get
-  }
-
-  private def toParameterValueList(values: Map[Object_, Parameter]) = {
-    val parameterValueList = new ParameterValueList
-    parameterValueList.addAll(values.map(entry => toParamterValue(entry._1, entry._2)))
-    parameterValueList
-  }
-
-  private def toParamterValue(value: Object_, parameter: Parameter) = {
-    val parameterValue = new ParameterValue
-    parameterValue.parameter = parameter
-    parameterValue.values.addValue(toReference(value))
-    parameterValue
-  }
-
-  private def toReference(value: Object_) = {
-    val reference = new Reference
-    reference.referent = value
-    reference
   }
 
   private def newEventListener(action: (Event => Unit)) = {

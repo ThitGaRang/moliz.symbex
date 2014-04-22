@@ -13,6 +13,7 @@ import fUML.Syntax.Activities.IntermediateActivities.ActivityParameterNode
 import fUML.Semantics.Classes.Kernel.Value
 import fUML.Syntax.Activities.IntermediateActivities.Activity
 import fUML.Syntax.Classes.Kernel.Element
+import fUML.Syntax.Classes.Kernel.StructuralFeature
 import fUML.Syntax.Classes.Kernel.NamedElement
 import org.modelexecution.fuml.use.transform.FumlModel2UseModel
 import org.modelexecution.fuml.use.transform.FumlValues2UseValues
@@ -31,110 +32,196 @@ import scala.collection.immutable.Map
 import scala.collection.immutable.Set
 import fUML.Syntax.Classes.Kernel.TypedElement
 import fUML.Syntax.Classes.Kernel.Type
+import org.modelexecution.fumldebug.core.event.ActivityNodeEntryEvent
+import org.modelexecution.fumldebug.core.event.ActivityEntryEvent
+import scala.collection.mutable
+import org.modelexecution.fumldebug.core.event.ActivityExitEvent
+import org.modelexecution.fumldebug.core.trace.tracemodel.Trace
+import fUML.Syntax.Actions.IntermediateActions.ReadStructuralFeatureAction
+import fUML.Syntax.Actions.BasicActions.Action
+import org.modelexecution.fumldebug.core.trace.tracemodel.ActionExecution
+import org.modelexecution.fumldebug.core.trace.tracemodel.DecisionNodeExecution
+import org.modelexecution.fumldebug.core.trace.tracemodel.Input
+import org.modelexecution.fumldebug.core.event.ActivityNodeExitEvent
+import org.modelexecution.fumldebug.core.trace.tracemodel.InputValue
+import org.modelexecution.fumldebug.core.trace.tracemodel.TokenInstance
+import org.modelexecution.fumldebug.core.trace.tracemodel.ObjectTokenInstance
+
+import org.modelexecution.fuml.symbexec.internal._
+
 import fUML.Syntax.Classes.Kernel.Class_
+import scala.collection.JavaConversions._
+import SymbolicExecutor._
 
-class SymbolicExecutor(context: SymbolicExecutionContext) {
-  import scala.collection.JavaConversions._
+class SymbolicExecutor(fumlModel: FumlModel, values: FumlValues = Set()) {
 
-  val fumlModel2UseModel = context.fumlModel.fumlModel2UseModel
+  val fumlModel2UseModel = fumlModel.fumlModel2UseModel
   val fumlValues2UseValues = FumlValues2UseValues(fumlModel2UseModel)
   val fumlExecutionCtx = ExecutionContext.getInstance()
 
-  var executionPath: ExecutionPath = null
+  val executionIds = new mutable.Stack[Int]()
+  var config: ExecutionConfiguration = null
   var executionTree: ExecutionTree = null
+  var currentTreeNode: ExecutionTreeNode = null
+  var currentBranch: Boolean = true
 
-  def execute(activity: Activity,
-    binding: ParameterBinding = ParameterBinding(),
-    contextObject: Object_ = null) = {
-    initialize
-
-    // fill in missing parameters
-    val unboundParameters = binding.unboundParameters(activity.ownedParameter)
-    val symParameterValues = unboundParameters.map{ para =>
-      (para, List(createValue(para.`type`)))
-    }
-    val filledParameterBinding = ParameterBinding(binding.binding ++ symParameterValues)
-    
-    // track symbolic input values
-    val symbolicInput = symParameterValues.map {
-      case (_, List(value)) => value
-    }
-    // TODO we should consider contextObject symbolic if null
+  def execute(config: ExecutionConfiguration): ExecutionTree = {
+    initialize(config)
 
     // TODO implement
+    fumlExecutionCtx.execute(config.activity,
+      config.contextObject, config.parameterValues)
 
     uninitializeExecutionCtx
+    executionTree
   }
-  
-  
-  private def createValue(fumlType: Type) = {
-    fumlType match {
-      // TODO support other types such as enumerations, etc.
-      case classType: Class_ => {
-    	  val obj = new Object_()
-    	  obj.types.addValue(classType)
-    	  obj
-      }
-    }
-  }
-  
 
-  private def initialize {
+  private def initialize(config: ExecutionConfiguration): Unit = {
     initializeExecutionCtx
-    executionPath = ExecutionPath()
+    executionIds.clear
+    this.config = config
   }
 
-  private def initializeExecutionCtx {
+  private def initializeExecutionCtx: Unit = {
     fumlExecutionCtx.reset()
-    fumlExecutionCtx.getExtensionalValues().addAll(context.values)
+    fumlExecutionCtx.getExtensionalValues().addAll(values)
     fumlExecutionCtx.addEventListener(eventHandler)
   }
 
-  private def uninitializeExecutionCtx {
+  private def uninitializeExecutionCtx: Unit = {
     fumlExecutionCtx.removeEventListener(eventHandler)
     fumlExecutionCtx.reset()
   }
 
   val eventHandler = new ExecutionEventListener() {
     override def notify(event: Event) {
-      // TODO implement
-      println("this is the symbex: " + event)
+      event match {
+        case e: ActivityEntryEvent => executionIds.push(e.getActivityExecutionID())
+        case e: ActivityExitEvent => executionIds.pop
+        case e: ActivityNodeEntryEvent => processNodeEntry(e)
+        case e: ActivityNodeExitEvent =>
+        // TODO we could check if we went as expected
+        // TODO update symbolic state
+        case _ =>
+      }
+    }
+  }
+
+  private def processNodeEntry(event: ActivityNodeEntryEvent): Unit = {
+    currentNodeExecution(executionTrace) match {
+      case actionExec: ActionExecution if (concernsSymbolicValue(actionExec)) =>
+        processAction(actionExec)
+      case decisionExec: DecisionNodeExecution if (concernsSymbolicValue(decisionExec)) =>
+        println("decision to be handled") // TODO implement
+      case _ =>
+    }
+  }
+
+  private def executionTrace = fumlExecutionCtx.getTrace(executionId)
+
+  private def executionId = {
+    executionIds.isEmpty match {
+      case false => executionIds.last
+      case true => -1
+    }
+  }
+
+  private def currentNodeExecution(trace: Trace) =
+    trace.getActivityExecutions().last.getNodeExecutions().last
+
+  private def concernsSymbolicValue(actionExec: ActionExecution) =
+    actionExec.getInputs() exists (isSymbolicInput)
+
+  private def concernsSymbolicValue(nodeExec: DecisionNodeExecution) =
+    hasSymbolicDecisionInputValue(nodeExec) || hasSymbolicRoutedInputValue(nodeExec)
+
+  private def hasSymbolicDecisionInputValue(nodeExec: DecisionNodeExecution) =
+    Option(nodeExec.getDecisionInputValue()) exists (isSymbolicInputValue)
+
+  private def hasSymbolicRoutedInputValue(nodeExec: DecisionNodeExecution) =
+    nodeExec.getRoutedTokens() exists (isSymbolicObjectTokenInstance)
+
+  private def isSymbolicObjectTokenInstance(tokenInstance: TokenInstance) = {
+    tokenInstance match {
+      case objectToken: ObjectTokenInstance =>
+        isSymbolicValue(objectToken.getTransportedValue().getRuntimeValue())
+      case _ => false
+    }
+  }
+
+  private def isSymbolicInput(input: Input): Boolean =
+    input.getInputValues() exists (isSymbolicInputValue)
+
+  private def isSymbolicInputValue(inputValue: InputValue) =
+    isSymbolicValue(inputValue.getInputValueSnapshot().getRuntimeValue())
+
+  private def isSymbolicValue(value: Value): Boolean = {
+    // TODO also check if it is a value that depends on a symbolic input
+    config.symbolicInputValues.contains(value)
+  }
+
+  private def processAction(actionExec: ActionExecution): Unit = {
+    val updatedExecTree = updateExecutionTree(actionExec)
+    if (updatedExecTree) {
+      // TODO
+      // ask execution strategy
+      // execute model finder for true or false path (according to strategy)
+      // update runtime model
+      // continue/restart execution
+    }
+  }
+
+  // Returns true if the execution tree has been updated
+  private def updateExecutionTree(actionExec: ActionExecution) = {
+    actionExec.getNode() match {
+      case _: ReadStructuralFeatureAction =>
+        updateExecutionTreeReadStructuralFeatureAction(actionExec); true
+      case _ => false
+    }
+  }
+
+  // TODO maybe move that into an execution tree builder
+  private def updateExecutionTreeReadStructuralFeatureAction(actionExec: ActionExecution) = {
+    val inputValues = actionExec.getInputs().head.getInputValues()
+    val firstInputValue = inputValues.filter(isSymbolicInputValue).toList.head
+    val symbolicValue = firstInputValue.getInputValueSnapshot().getRuntimeValue()
+    val feature = actionExec.getNode().asInstanceOf[ReadStructuralFeatureAction].structuralFeature
+
+    val pathCondition = ExistsFeatureValue(symbolicValue, feature)
+    val executionStep = ExecutionStep(pathCondition, actionExec)
+
+    addExecutionTreeNode(ExecutionTreeNode(executionStep))
+  }
+
+  private def addExecutionTreeNode(treeNode: ExecutionTreeNode): Unit = {
+    if (currentTreeNode == null) {
+      currentTreeNode = treeNode
+      executionTree = currentTreeNode
+    } else {
+      if (currentBranch == true) currentTreeNode.trueBranch = treeNode
+      if (currentBranch == false) currentTreeNode.falseBranch = treeNode
+      treeNode.parent = Some(currentTreeNode)
+      currentTreeNode = treeNode
     }
   }
 
 }
 
 object SymbolicExecutor {
-
-  def apply(context: SymbolicExecutionContext) =
-    new SymbolicExecutor(context)
-
-  def apply(fumlModel: FumlModel,
-    values: Set[_ <: ExtensionalValue] = Set()): SymbolicExecutor =
-    SymbolicExecutor(SymbolicExecutionContext(fumlModel, values))
-
-}
-
-case class ParameterBinding(binding: Map[Parameter, List[_ <: ExtensionalValue]] = Map()) {
-  import FumlUtilities._
-  def unboundParameters(parameters: Traversable[Parameter]) = {
-    parameters.filter(inParameter).filterNot(binding.isDefinedAt).toList
-  }
+  type FumlValues = Set[_ <: ExtensionalValue]
+  def apply(fumlModel: FumlModel, values: FumlValues = Set()): SymbolicExecutor =
+    new SymbolicExecutor(fumlModel, values)
 }
 
 trait SymbolicExecutionStrategy {
-  def pick(path: ExecutionPath, tree: ExecutionTree): Option[Boolean]
+  def pick(currentTreeNode: ExecutionTreeNode): Option[Boolean]
   // specific implementations might need access to
   // Activity and a work list (nodes to execute)
+  // TODO introduce continue method
 }
 
-case class SymbolicExecutionContext(
-  fumlModel: FumlModel,
-  values: Set[_ <: ExtensionalValue])
-
 case class SymbolicValue(
-  value: ExtensionalValue,
-  var concreteProperties: Set[Property] = Set[Property]())
+  value: Value, var concreteProperties: Set[Property] = Set[Property]())
 
 case class FumlModel(name: String = "Anonymous", elements: Set[Element]) {
   val fumlModel2UseModel = FumlModel2UseModel(name, elements)
@@ -146,20 +233,3 @@ object FumlModel {
     FumlModel(element.name, Set(element))
 }
 
-sealed trait PathCondition
-case class ExistentialPathCondition extends PathCondition
-case class PathExpression extends PathCondition // inputs, decision behavior, output
-
-case class ExecutionPath(var steps: Seq[ExecutionStep] = Seq())
-case class ExecutionStep(
-  condition: PathCondition,
-  nodeExecution: ActivityNodeExecution,
-  symbolicState: Map[Value, String] = Map())
-
-sealed trait ExecutionTree
-case object Unsatisfiable extends ExecutionTree
-case object Unexplored extends ExecutionTree
-case class ExecutionTreeNode(step: ExecutionStep,
-  var falseBranch: ExecutionTree,
-  var trueBranch: ExecutionTree)
-    extends ExecutionTree
