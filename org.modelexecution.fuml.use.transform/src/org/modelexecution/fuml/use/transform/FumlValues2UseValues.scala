@@ -137,13 +137,13 @@ class FumlValues2UseValues(val fUml2Use: FumlModel2UseModel)
   }
 
   private def linkedObjects(fumlLink: Link) = {
-    featureValueValues(fumlLink).collect {
+    valuesOfFeatureValue(fumlLink).collect {
       case reference: Reference => reference.referent
       case obj: Object_ => obj
     }
   }
 
-  private def featureValueValues(value: ExtensionalValue) = {
+  private def valuesOfFeatureValue(value: ExtensionalValue) = {
     value.featureValues.flatMap(_.values).toSeq
   }
 

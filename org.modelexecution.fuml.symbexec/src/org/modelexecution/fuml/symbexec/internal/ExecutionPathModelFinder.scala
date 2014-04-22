@@ -37,12 +37,11 @@ class ExecutionPathModelFinder(fumlModel: FumlModel) {
 
   def findModel(executionPath: ExecutionPath, values: Set[Value]) = {
     fumlValues2UseValues.transformAll(values)
-
-    val executionSteps = executionPath.executionSteps
-    val objectConstraints = executionSteps.map(toUseObjectConstraints)
     
     val modelFinder = new UseModelFinder(useSystem)
     val config = ModelFinderConfiguration(useModel)
+    val executionSteps = executionPath.executionSteps
+    val objectConstraints = executionSteps.map(toUseObjectConstraints)
     val result = modelFinder.findModel(config, objectConstraints)
 
     val useValues2FumlValues = UseValues2FumlValues(fumlModel2UseModel, currentUseState)
