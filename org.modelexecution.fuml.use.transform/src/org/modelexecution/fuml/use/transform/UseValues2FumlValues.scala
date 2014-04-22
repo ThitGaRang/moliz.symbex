@@ -46,14 +46,12 @@ import org.tzi.use.uml.sys.MSystemState
 import org.tzi.use.uml.sys.MLinkEnd
 import fUML.Semantics.Classes.Kernel.Reference
 
-class UseValues2FumlValues(val fUml2Use: FumlModel2UseModel)
+class UseValues2FumlValues(val fUml2Use: FumlModel2UseModel, val useState: MSystemState)
   extends TracingOneToOneTransformation[Object, Kernel.Value] {
   import scala.collection.JavaConversions._
 
   type FumlValue = Kernel.Value
   type UseValue = value.Value
-
-  var useState: MSystemState = null
 
   override def children(value: Object) = Seq()
 
@@ -199,5 +197,6 @@ class UseValues2FumlValues(val fUml2Use: FumlModel2UseModel)
 }
 
 object UseValues2FumlValues {
-  def apply(fUml2Use: FumlModel2UseModel) = new UseValues2FumlValues(fUml2Use)
+  def apply(fUml2Use: FumlModel2UseModel,
+      useState: MSystemState) = new UseValues2FumlValues(fUml2Use, useState)
 }

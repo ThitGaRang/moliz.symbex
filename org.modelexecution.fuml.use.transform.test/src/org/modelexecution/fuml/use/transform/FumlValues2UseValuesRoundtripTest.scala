@@ -48,8 +48,7 @@ class FumlValues2UseValuesRoundtripTest extends TestCase {
     val useValues = fUmlValues2UseValues.transformAll(model.valueScenario1).map(_.get)
 
     // transform USE back to fUML -- Roundtrip
-    val useValues2FumlValues = UseValues2FumlValues(fUml2UseModel)
-    useValues2FumlValues.useState = fUmlValues2UseValues.useState
+    val useValues2FumlValues = UseValues2FumlValues(fUml2UseModel, fUmlValues2UseValues.useState)
     val fUmlValues2 = useValues2FumlValues.transformAll(useValues).map(_.get)
 
     // transform resulting fUML again to USE -- RUN 2
