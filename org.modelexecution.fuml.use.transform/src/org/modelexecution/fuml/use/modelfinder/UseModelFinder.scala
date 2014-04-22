@@ -43,12 +43,7 @@ import org.tzi.use.uml.ocl.expr.Expression
 import org.tzi.use.uml.sys.MObject
 import org.tzi.use.uml.sys.MSystem
 
-// TODO optimization
-// could be changed so that constructor only takes model
-// and findModel takes system state, to save memory and transformation time
-
-class UseModelFinder(val useSystem: MSystem,
-  val objectConstraints: Traversable[UseObjectConstraint]) {
+class UseModelFinder(val useSystem: MSystem) {
   import collection.JavaConversions._
 
   val model = useSystem.model()
@@ -125,8 +120,9 @@ class UseModelFinder(val useSystem: MSystem,
     obj.name()
   }
 
-  def findModel(configuration: ModelFinderConfiguration) = {
-    installObjectConstraintsInModel
+  def findModel(configuration: ModelFinderConfiguration,
+    objectConstraints: Traversable[UseObjectConstraint]) = {
+    installObjectConstraintsInModel(objectConstraints)
     configureIModel(configuration)
     val validator = new InternalUseKodkodModelValidator(useSystem)
     validator.validate(iModel)
@@ -134,8 +130,9 @@ class UseModelFinder(val useSystem: MSystem,
     validator.foundValidSolution
   }
 
-  private def installObjectConstraintsInModel() {
-    constraintsPerObject map {
+  private def installObjectConstraintsInModel(
+    objectConstraints: Traversable[UseObjectConstraint]) {
+    constraintsPerObject(objectConstraints) map {
       case (obj, constraints) =>
         val objectVar = objectVariableName(obj)
         val combinedConstraint = constraints.reduce(_ + " and " + _)
@@ -146,16 +143,16 @@ class UseModelFinder(val useSystem: MSystem,
     }
   }
 
-  private def constraintsPerObject() = {
-    constrainedObjects.map(obj => (obj, constraintsOfObject(obj))).toMap
+  private def constraintsPerObject(constraints: Traversable[UseObjectConstraint]) = {
+    val constrainedObjs = constraints.map(_.mObject)
+    val constraintsPerObjs = constrainedObjs.map { obj =>
+      (obj, constraintsOfObject(obj, constraints))
+    }
+    constraintsPerObjs.toMap
   }
 
-  private def constrainedObjects() = {
-    objectConstraints.map(_.mObject)
-  }
-
-  private def constraintsOfObject(obj: MObject) = {
-    objectConstraints.collect {
+  private def constraintsOfObject(obj: MObject, constraints: Traversable[UseObjectConstraint]) = {
+    constraints.collect {
       case objConstraint: UseObjectConstraint if obj == objConstraint.mObject =>
         objConstraint.constraint
     }
@@ -192,7 +189,7 @@ class UseModelFinder(val useSystem: MSystem,
 case class UseObjectConstraint(mObject: MObject, constraint: String)
 
 class InternalUseKodkodModelValidator(useSystem: MSystem)
-  extends UseKodkodModelValidator(useSystem) {
+    extends UseKodkodModelValidator(useSystem) {
 
   object ModelFindingResult extends Enumeration {
     type ModelFindingResult = Value

@@ -36,8 +36,9 @@ class ExecutionPathModelFinder(fumlModel: FumlModel) {
     val executionSteps = executionPath.executionSteps
     val objectConstraints = executionSteps.map(toUseObjectConstraints)
     
-    val modelFinder = new UseModelFinder(useSystem, objectConstraints)
-    val result = modelFinder.findModel(ModelFinderConfiguration(useModel))
+    val modelFinder = new UseModelFinder(useSystem)
+    val config = ModelFinderConfiguration(useModel)
+    val result = modelFinder.findModel(config, objectConstraints)
 
     val useValues2FumlValues = UseValues2FumlValues(fumlModel2UseModel, currentUseState)
     useValues2FumlValues.transformAll(currentObjectsAndLinks).map(_.get)

@@ -49,9 +49,8 @@ class UseModelFinderTest extends TestCase {
         UseObjectConstraint(personClassObject, "self.objects->exists(o | o.type = self and o.slink->forAll(l | self.references->exists(r | r.referenceType = l.target.type)))")
     )
 
-    val modelFinder = new UseModelFinder(fUmlValues2UseValues.useSystem, objectConstraints)
-
-    val result = modelFinder.findModel(configuration)
+    val modelFinder = new UseModelFinder(fUmlValues2UseValues.useSystem)
+    val result = modelFinder.findModel(configuration, objectConstraints)
 
     println(result)
     println("===============")
