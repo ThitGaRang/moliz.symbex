@@ -23,6 +23,11 @@ import fUML.Syntax.Classes.Kernel.StructuralFeature
 
 import scala.collection.JavaConversions._
 
+// TODO optimization
+// we could try to make this epmodel finder reusable across all model finding activities
+// by also representing concrete intermediate results with OCL
+// this would safe translation time
+// alternatively, we could improve the reusability of the UseModelFinder across multiple calls
 class ExecutionPathModelFinder(fumlModel: FumlModel) {
 
   private val fumlModel2UseModel = fumlModel.fumlModel2UseModel
